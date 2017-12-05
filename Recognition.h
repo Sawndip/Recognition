@@ -21,6 +21,7 @@ private:
     void showImages();
     bool didFindAnswer(const MatrixClass &matrix);
     bool isNetworkInRelaxation();
+    void showAnswer(int i);
 public:
     Recognition(){}
     Recognition(const char *directoryPath, const char *noisyPath);

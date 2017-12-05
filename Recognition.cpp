@@ -73,11 +73,27 @@ void Recognition::recognition() {
         std::cout<< "\nIteration: " << iteration << std::endl;
         Y.beautifulVisualization(N); printf("\n");
     } while(!didRecognize);
-    std::cout<< "After " << iteration << " iteration(s) recognized image is: " << std::endl;
-    Y = history[history.size() - 2];
-    Y.beautifulVisualization(N);
-    std::cout << "Output vector is:\n";
-    Y.show();
+    showAnswer(iteration);
+}
+
+void Recognition::showAnswer(int iteration) {
+    auto size = history.size();
+    MatrixClass Xi = history[size - 2];
+    MatrixClass Xi_plus1 = history[size - 1];
+    if (Xi != Xi_plus1) {
+        printf("You got dynamic attractor!\n");
+        std::cout<< "After " << iteration - 1 << " iteration(s) Xi = "; Xi.show();
+        Xi.beautifulVisualization(N);
+        std::cout<< "After " << iteration << " iteration(s) Xi+1 = "; Xi_plus1.show();
+        Xi_plus1.beautifulVisualization(N);
+    }
+    else {
+        printf("You got static attractor!\n");
+        std::cout << "After " << iteration << " iteration(s) recognized image is: " << std::endl;
+        Y = history[history.size() - 2];
+        Y.beautifulVisualization(N);
+        std::cout << "Output vector is: "; Y.show();
+    }
 }
 
 bool Recognition::didFindAnswer(const MatrixClass &matrix) {
@@ -102,8 +118,9 @@ bool Recognition::isNetworkInRelaxation() {
         printf("Expected: "); printf("\n");
         image.beautifulVisualization(N); printf("\n");
         printf("Got: "); printf("\n");
-        (image * W).activationFunction().beautifulVisualization(N); printf("\n");
-        if (image != (image * W).activationFunction()) {
+        MatrixClass image_ = (image * W).activationFunction();
+        image_.beautifulVisualization(N); printf("\n");
+        if (image.activationFunction() != image_) {
             return false;
         }
     }
