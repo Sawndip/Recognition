@@ -2,11 +2,10 @@
  * @author Aleksey Sevko
  */
 #ifndef IMAGECOMPRESSION_MATRIXCLASS_H
-
+#define IMAGECOMPRESSION_MATRIXCLASS_H
 #include <vector>
 #include <cmath>
 #include <iostream>
-#define IMAGECOMPRESSION_MATRIXCLASS_H
 
 /// sizeX = n, sizeY = m
 class MatrixClass {
@@ -175,6 +174,9 @@ public:
         return true;
     }
 
+    friend bool operator !=(const MatrixClass &l, const MatrixClass &r) {
+        return  !(l == r);
+    }
 
     void show();
     void visualize();
@@ -184,6 +186,7 @@ public:
     void insert(const double& value);
     void nullifyMainDiagonal();
     void resize(unsigned int sizeX, unsigned int sizeY);
+    double sumABS();
     virtual int getX() const { return this->sizeX; };
     virtual int getY() const { return this->sizeY; };
 };

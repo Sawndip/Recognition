@@ -7,7 +7,7 @@
 void MatrixClass::beautifulVisualization(const double &n) {
     MatrixClass thisT = *this;
     thisT = thisT.transpose();
-    MatrixClass toVisualize( thisT , (unsigned int) n);
+    MatrixClass toVisualize(thisT , (unsigned int) sqrt(n));
     toVisualize.visualize();
 }
 
@@ -84,6 +84,15 @@ void MatrixClass::nullifyMainDiagonal() {
             if (i == j ) {
                 matrix[sizeX * i + j] = 0;
             }
+        }
+    }
+}
+
+double MatrixClass::sumABS() {
+    double result = 0;
+    for (unsigned int i = 0; i < sizeX; i++) {
+        for (unsigned int j = 0; j < sizeY; j++) {
+            result += abs(matrix[sizeX * i + j]);
         }
     }
 }
