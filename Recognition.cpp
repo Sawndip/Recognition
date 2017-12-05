@@ -69,6 +69,18 @@ void Recognition::recognition() {
         Y = Y_.activationFunction();
         didRecognize = didFindAnswer(Y);
         history.push_back(Y);
+        if (didRecognize) {
+            if (history.size() < 4) {
+                didRecognize = false;
+            } else {
+                auto size = history.size();
+                MatrixClass Xi = history[size - 2];
+                MatrixClass Xi_plus1 = history[size - 1];
+                MatrixClass Xi_minus1 = history[size - 3];
+                MatrixClass Xi_minus2 = history[size - 4];
+                didRecognize = Xi == Xi_minus2 && Xi_plus1 == Xi_minus1;
+            }
+        }
         iteration++;
         std::cout<< "\nIteration: " << iteration << std::endl;
         Y.beautifulVisualization(N); printf("\n");
