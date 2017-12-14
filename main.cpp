@@ -1,5 +1,4 @@
 #include <iostream>
-#include <fstream>
 #include "Recognition.h"
 
 const char *directoryPath;
