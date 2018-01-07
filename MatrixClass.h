@@ -6,6 +6,7 @@
 #include <vector>
 #include <cmath>
 #include <iostream>
+#include <algorithm>
 
 /// sizeX = n, sizeY = m
 class MatrixClass {
@@ -17,6 +18,7 @@ public:
     MatrixClass (unsigned int x, unsigned int y)
             : sizeX(x), sizeY(y) {
         matrix.resize(sizeX * sizeY);
+        std::fill(matrix.begin(), matrix.end(), 0);
     }
 
     explicit MatrixClass (std::vector<double> vector)
@@ -160,14 +162,15 @@ public:
     }
 
     friend bool operator == (const MatrixClass &l, const MatrixClass &r) {
+        double e = 0.00001;
         if (l.sizeX != r.sizeX
             || l.sizeY != r.sizeY) {
             return false;
         }
         MatrixClass result(l.sizeX, l.sizeY);
-        auto n = static_cast<unsigned int>(l.matrix.size());
+        unsigned int n = l.matrix.size();
         for (unsigned int i = 0; i < n; i ++) {
-            if (l.matrix[i] !=  r.matrix[i]) {
+            if (abs(l.matrix[i] -  r.matrix[i]) > e ) {
                 return false;
             }
         }

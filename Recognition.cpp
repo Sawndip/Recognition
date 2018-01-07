@@ -2,11 +2,11 @@
 
 Recognition::Recognition(const char *directoryPath, const char *noisyPath) {
     loadTemplates(directoryPath);
-    this->Y = MatrixClass(getVectorFromFile(noisyPath));
+    this->X = MatrixClass(getVectorFromFile(noisyPath));
     std::cout << "input vector: " << std::endl;
-    Y.show();
+    X.show();
     std::cout << "Image to recognize: " << std::endl;
-    Y.beautifulVisualization(N);
+    X.beautifulVisualization(N);
     this->W = MatrixClass(N , N);
     showImages();
     calculateWeights();
@@ -51,70 +51,66 @@ std::vector<double> Recognition::getVectorFromFile(const char *file) {
 }
 
 void Recognition::calculateWeights() {
-    bool isRelaxation;
+    double e = 0.000000001;
+    double h = 0.8;
+    double change;
+    std::vector<double> change_;
+    iterations = 0;
     do {
+        iterations++;
+        change = 0;
         for (MatrixClass image : templates) {
-            W = W + image.transpose() * (image - image * W )  * (0.8 / N);
+            MatrixClass Xi = image.transpose();
+            MatrixClass deltaW = (Xi - W * Xi ) * Xi.transpose()  * (h / N);
+            W = W + deltaW;
+            change += deltaW.sumABS();
         }
-        W.nullifyMainDiagonal();
-        isRelaxation = isNetworkInRelaxation();
-    } while (!isRelaxation);
+        change_.push_back(change);
+        if (change_.size() > 1) {
+            change = abs(change - change_[change_.size() - 2]);
+        }
+    } while (change > e);
+    std::cout << "Iteration: " << iterations << std::endl;
 }
 
 void Recognition::recognition() {
-    bool didRecognize;
-    int iteration = 0;
+    bool relaxation = false;
+    MatrixClass prev;
+    generateRandomIndexes();
+    recIterations = 0;
     do {
-        MatrixClass Y_ = Y * W;
-        Y = Y_.activationFunction();
-        didRecognize = didFindAnswer(Y);
-        history.push_back(Y);
-        if (didRecognize) {
-            if (history.size() < 4) {
-                didRecognize = false;
-            } else {
-                auto size = history.size();
-                MatrixClass Xi = history[size - 2];
-                MatrixClass Xi_plus1 = history[size - 1];
-                MatrixClass Xi_minus1 = history[size - 3];
-                MatrixClass Xi_minus2 = history[size - 4];
-                didRecognize = Xi == Xi_minus2 && Xi_plus1 == Xi_minus1;
-            }
+        doIteration(X);
+        if (prev == X) {
+            relaxation = true;
+        } else {
+            prev = X;
         }
-        iteration++;
-        std::cout<< "\nIteration: " << iteration << std::endl;
-        Y.beautifulVisualization(N); printf("\n");
-    } while(!didRecognize);
-    showAnswer(iteration);
+        recIterations++;
+    } while (!relaxation);
+    showAnswer(recIterations);
+}
+
+void Recognition::doIteration(MatrixClass &X) {
+    int changed = 0;
+    do {
+        unsigned int index = getRandomIndex(changed + 1);
+        double newXi = 0;
+        for (unsigned int i = 0; i < N; i++){
+            newXi += X(0, i) * W(index, i);
+        }
+//        MatrixClass Xi = X * W;
+//        X(0, index) = Xi(0, index);
+        X(0, index) = newXi;
+        X.activationFunction();
+        changed++;
+    }while (changed < N);
 }
 
 void Recognition::showAnswer(int iteration) {
-    auto size = history.size();
-    MatrixClass Xi = history[size - 2];
-    MatrixClass Xi_plus1 = history[size - 1];
-    if (Xi != Xi_plus1) {
-        printf("You got dynamic attractor!\n");
-        std::cout<< "After " << iteration - 1 << " iteration(s) Xi = "; Xi.show();
-        Xi.beautifulVisualization(N);
-        std::cout<< "After " << iteration << " iteration(s) Xi+1 = "; Xi_plus1.show();
-        Xi_plus1.beautifulVisualization(N);
-    }
-    else {
-        printf("You got static attractor!\n");
-        std::cout << "After " << iteration << " iteration(s) recognized image is: " << std::endl;
-        Y = history[history.size() - 2];
-        Y.beautifulVisualization(N);
-        std::cout << "Output vector is: "; Y.show();
-    }
-}
-
-bool Recognition::didFindAnswer(const MatrixClass &matrix) {
-    for (const MatrixClass &image : history) {
-        if (matrix == image) {
-            return true;
-        }
-    }
-    return false;
+    printf("You got static attractor!\n");
+    std::cout << "After " << iteration << " iteration(s) recognized image is: " << std::endl;
+    X.beautifulVisualization(N);
+    std::cout << "Output vector is: "; X.show();
 }
 
 void Recognition::showImages() {
@@ -125,16 +121,14 @@ void Recognition::showImages() {
     }
 }
 
-bool Recognition::isNetworkInRelaxation() {
-    for (MatrixClass image : templates) {
-        printf("Expected: "); printf("\n");
-        image.beautifulVisualization(N); printf("\n");
-        printf("Got: "); printf("\n");
-        MatrixClass image_ = (image * W).activationFunction();
-        image_.beautifulVisualization(N); printf("\n");
-        if (image.activationFunction() != image_) {
-            return false;
-        }
+void Recognition::generateRandomIndexes() {
+    srand(time(nullptr));
+    for(unsigned int i = 0; i < N; i ++) {
+        randomIndexes.push_back(i);
     }
-    return true;
+    std::shuffle(randomIndexes.begin(), randomIndexes.end(), std::mt19937(std::random_device()()));
+}
+
+unsigned int Recognition::getRandomIndex(int i) {
+    return randomIndexes[randomIndexes.size() - i];
 }

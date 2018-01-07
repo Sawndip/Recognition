@@ -14,7 +14,7 @@ void MatrixClass::beautifulVisualization(const double &n) {
 void MatrixClass::visualize() {
     for (unsigned int i = 0; i < sizeX; i++) {
         for (unsigned int j = 0; j < sizeY; ++j) {
-            if (matrix[sizeX * i + j] == 1) {
+            if (matrix[sizeX * i + j] > 0) {
                 std::cout << "#";
             } else {
                 std::cout << ".";
@@ -28,7 +28,10 @@ void MatrixClass::visualize() {
 void MatrixClass::show() {
     for (unsigned int i = 0; i < sizeX; i++) {
         for (unsigned int j = 0; j < sizeY; ++j) {
-            std::cout << matrix[sizeX * i + j] << " ";
+            if (matrix[sizeX * i + j] < 0)
+                std::cout << matrix[sizeX * i + j] << " ";
+            else
+                std::cout << " " << matrix[sizeX * i + j] << " ";
             if (j == sizeY - 1)
                 std::cout << std::endl;
         }
@@ -47,13 +50,7 @@ MatrixClass MatrixClass::transpose() {
 
 MatrixClass& MatrixClass::activationFunction() {
     for (unsigned int i = 0; i < this->sizeX * this->sizeY; i ++) {
-        if (this->matrix[i] > 0) {
-            this->matrix[i] = 1;
-        } else if (this->matrix[i] < 0) {
-            this->matrix[i] = -1;
-        } else {
-            this->matrix[i] = 0;
-        }
+        this->matrix[i] = tanh(this->matrix[i]);
     }
     return *this;
 }
@@ -90,9 +87,8 @@ void MatrixClass::nullifyMainDiagonal() {
 
 double MatrixClass::sumABS() {
     double result = 0;
-    for (unsigned int i = 0; i < sizeX; i++) {
-        for (unsigned int j = 0; j < sizeY; j++) {
-            result += abs(matrix[sizeX * i + j]);
-        }
+    for (unsigned int i = 0; i < sizeX * sizeY; i++) {
+        result += abs(matrix[i]);
     }
+    return result;
 }
