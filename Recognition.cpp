@@ -1,7 +1,5 @@
 #include "Recognition.h"
 
-#include <random>
-
 Recognition::Recognition(const char *directoryPath, const char *noisyPath) {
     loadTemplates(directoryPath);
     this->X = MatrixClass(getVectorFromFile(noisyPath));
@@ -57,13 +55,13 @@ void Recognition::calculateWeights() {
     double h = 0.8;
     double change;
     std::vector<double> change_;
+    iterations = 0;
     do {
         iterations++;
         change = 0;
         for (MatrixClass image : templates) {
             MatrixClass Xi = image.transpose();
             MatrixClass deltaW = (Xi - W * Xi ) * Xi.transpose()  * (h / N);
-            deltaW.nullifyMainDiagonal();
             W = W + deltaW;
             change += deltaW.sumABS();
         }
@@ -76,11 +74,11 @@ void Recognition::calculateWeights() {
 }
 
 void Recognition::recognition() {
-    srand (time(nullptr));
     bool relaxation = false;
     MatrixClass prev;
+    generateRandomIndexes();
+    recIterations = 0;
     do {
-        generateRandomIndexes();
         doIteration(X);
         if (prev == X) {
             relaxation = true;
@@ -93,12 +91,19 @@ void Recognition::recognition() {
 }
 
 void Recognition::doIteration(MatrixClass &X) {
+    int changed = 0;
     do {
-        unsigned int index = getRandomIndex();
-        MatrixClass Xi = X * W;
-        X(0, index) = Xi(0, index);
+        unsigned int index = getRandomIndex(changed + 1);
+        double newXi = 0;
+        for (unsigned int i = 0; i < N; i++){
+            newXi += X(0, i) * W(index, i);
+        }
+//        MatrixClass Xi = X * W;
+//        X(0, index) = Xi(0, index);
+        X(0, index) = newXi;
         X.activationFunction();
-    } while (!randomIndexes.empty());
+        changed++;
+    }while (changed < N);
 }
 
 void Recognition::showAnswer(int iteration) {
@@ -120,15 +125,10 @@ void Recognition::generateRandomIndexes() {
     srand(time(nullptr));
     for(unsigned int i = 0; i < N; i ++) {
         randomIndexes.push_back(i);
-        std::shuffle(randomIndexes.begin(), randomIndexes.end(), std::mt19937(std::random_device()()));
     }
     std::shuffle(randomIndexes.begin(), randomIndexes.end(), std::mt19937(std::random_device()()));
 }
 
-unsigned int Recognition::getRandomIndex() {
-    srand(time(nullptr));
-    double index = randomIndexes[randomIndexes.size() - 1];
-    randomIndexes.pop_back();
-    std::shuffle(randomIndexes.begin(), randomIndexes.end(), std::mt19937(std::random_device()()));
-    return index;
+unsigned int Recognition::getRandomIndex(int i) {
+    return randomIndexes[randomIndexes.size() - i];
 }

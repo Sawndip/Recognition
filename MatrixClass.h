@@ -6,6 +6,7 @@
 #include <vector>
 #include <cmath>
 #include <iostream>
+#include <algorithm>
 
 /// sizeX = n, sizeY = m
 class MatrixClass {
@@ -17,6 +18,7 @@ public:
     MatrixClass (unsigned int x, unsigned int y)
             : sizeX(x), sizeY(y) {
         matrix.resize(sizeX * sizeY);
+        std::fill(matrix.begin(), matrix.end(), 0);
     }
 
     explicit MatrixClass (std::vector<double> vector)
